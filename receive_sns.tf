@@ -89,3 +89,28 @@ resource "aws_sns_topic_subscription" "lambda" {
   protocol = "lambda"
   endpoint = aws_lambda_function.lambda.arn
 }
+
+resource "aws_appsync_datasource" "none" {
+  api_id           = aws_appsync_graphql_api.appsync.id
+  name             = "none"
+  service_role_arn = aws_iam_role.appsync.arn
+  type             = "NONE"
+}
+
+resource "aws_appsync_resolver" "Mutation_receivedNotification" {
+  api_id      = aws_appsync_graphql_api.appsync.id
+  type        = "Mutation"
+  field       = "receivedNotification"
+  data_source = aws_appsync_datasource.none.name
+	request_template = <<EOF
+{
+	"version": "2018-05-29",
+	"payload": $util.toJson($ctx.args.message)
+}
+EOF
+
+	response_template = <<EOF
+$util.toJson($ctx.result)
+EOF
+}
+
